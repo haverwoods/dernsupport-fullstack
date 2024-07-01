@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -12,7 +13,7 @@ const Login = () => {
 
     const { username, password } = formData;
     if (username === "sam" && password === "123") {
-      navigate("/dashboard");
+      navigate("/home");
     } else {
       alert("wrong username or password");
     }
