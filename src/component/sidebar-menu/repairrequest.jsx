@@ -1,24 +1,28 @@
 import React from "react";
 import Sidebar from "../sidebar";
 import { MdOutlineDevices, MdOutlineDriveFolderUpload } from "react-icons/md";
+import Layout from "../layout/layout";
 
 export const Repairrequest = () => {
   return (
-    <div className="grid grid-cols-7 gap-0 bg-gray-800">
-      <div className=" grid col-span-1 ">
-        <Sidebar />
-      </div>
+    // <div className="grid grid-cols-7 gap-0 bg-gray-800">
+    //   <div className=" grid col-span-1 ">
+    //     <Sidebar />
+    //   </div>
+      <Layout >
+    {/* <div className="grid grid-cols-7 gap-0 bg-gray-800"> */}
+    <div className="col-span-6">
 
-      {/* <div className='ml-56 h-screen bg-slate-900 text-white'> */}
-      <div className="col-start-2 col-end-11 h-screen ml-7 mt-5 text-white">
-        <h1 className="text-2xl mt-2 mx-12 uppercase">Repair request</h1>
-        <div className=" bg-slate-400 h-auto my-10 mx-10 backdrop-blur-sm bg-opacity-50">
+      {/* <div className="col-start-2 col-end-11 h-screen ml-7 mt-5 text-white"> */}
+      <div className=" h-screen ml-7 mt-5 text-black">
+        <h1 className="text-xl mt-2 mx-12 uppercase">Repair request</h1>
+        <div className=" bg-zinc-200 h-auto my-10 w-2/4 backdrop-blur-sm bg-opacity-50 border-b-2 ">
           <form action="">
             <div className=" ml-1 mr-5 mt-3  text-xl font-semibold">
               <h1 className="text-xl my-1 uppercase ml-5">enter date</h1>
               <input
                 type="date"
-                className="input-date bg-slate-300 outline-none border-none w-auto py-2 px-4  mx-5 mt-3 rounded-lg "
+                className="input-date bg-gray-200 outline-none border-none w-auto py-2 px-4  mx-5 mt-3 rounded-lg "
                 required
               />
             </div>
@@ -69,6 +73,7 @@ export const Repairrequest = () => {
         </div>
       </div>
     </div>
+      </Layout>
   );
-};
+}
 export default Repairrequest;
