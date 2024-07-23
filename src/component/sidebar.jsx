@@ -1,5 +1,5 @@
 import React from "react";
-import { FaBook } from "react-icons/fa";
+import { FaBook, FaShoppingCart } from "react-icons/fa";
 import { GiAutoRepair } from "react-icons/gi";
 import { IoIosSettings, IoMdHome } from "react-icons/io";
 import { IoNotifications } from "react-icons/io5";
@@ -16,36 +16,41 @@ export const Sidebar = () => {
   const nav = [
     {
       route: "/home",
-      name: "Home",
-      icon:<IoMdHome className="h-6 w-6" />
+      name: "admin dashboard",
+      icon:<IoMdHome className="h-5 w-4" />
 
     },
     {
       route: "/Repairrequest",
       name: "Repair request",
-      icon:<MdHomeRepairService className="h-6 w-6" />
+      icon:<MdHomeRepairService className="h-5 w-4" />
+    },
+    {
+      route: "/Order",
+      name: "order",
+      icon:<FaShoppingCart  className="h-5 w-4" />
     },
     {
       route: "/knowledge",
       name: "knowledge",
-      icon:<FaBook className="h-6 w-6" />
+      icon:<FaBook className="h-5 w-4" />
     },
     {
       route: "/notification",
       name: "notification",
-      icon:<IoNotifications className="h-6 w-6" />
+      icon:<IoNotifications className="h-5 w-4" />
     },
     {
       route: "/setting",
       name: "setting",
-      icon:<IoIosSettings className="h-6 w-6" />
+      icon:<IoIosSettings className="h-5 w-4" />
     },
   ];
 
   return (
-    <div className=" h-full   pb-10 color: bg-cyan-200">
+    <div className=" h-screen w-44  color: bg-stone-950">
       <div className="">
-        <div className="item-center mt-3 mx-2 gap-1 flex text-xl font-semibold">
+        <div className="item-center mt-3 mx-2 gap-1 flex text-xl font-semibold text-white">
           <GiAutoRepair className="h-8 w-8" />
           <span>dern support</span>
         </div>
@@ -54,7 +59,7 @@ export const Sidebar = () => {
             (nv) => (
               <span
                 onClick={() => navigateRoute(nv.route)}
-                className="item-center  gap-1 flex font-semibold hover:bg-sky-400  text-black uppercase rounded-lg px-2 cursor-pointer"
+                className="item-center  gap-1 flex  hover:bg-gray-700  text-white  rounded-lg px-2 cursor-pointer"
               >
                 {nv.icon}
                 {nv.name}
