@@ -1,119 +1,256 @@
-import React, { useState } from "react";
-import { MdOutlineDevices, MdOutlineDriveFolderUpload } from "react-icons/md";
-import Layout from "../layout/layout";
+import React, { useEffect, useState } from "react";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import Layout from "../layout/layout";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+// import { toast, useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
+
+
+// import { decode } from "jwt-decode";
+// import { useAuth } from "../context/authcontexts"; // Custom auth hook
 
 export const Repairrequest = () => {
+  const [email, setEmail] = useState("");
+  const [description, setDescription] = useState("");
+  const [pickup_date, setpickupdate] = useState("");  
+  const [image, setImage] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [userInfo, setUserInfo] = useState({
+    id: null,
+    username: null,
+    email: null,
+  });
+  const [tokenDebugInfo, setTokenDebugInfo] = useState({
+    tokenPresent: false,
+    decodedSuccessfully: false,
+  });
+
+  // const [date, setDate] = React.useState<Date>
+  const [date, setDate] = React.useState(null);
+  const { toast} = useToast()
+
+  // const { user , loading } = useAuth(); // Access authenticated user
+  // const token = localStorage.getItem("authToken");
+  // const decodedToken = token ? jwtDecode(token) : null;
+  // const email = decodedToken?.email || "Not logged in";
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log("Token from localStorage:", token ? "Present" : "Not found");
+
+    const storedEmail = localStorage.getItem("email");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        console.log("Decoded token:", decodedToken);
+
+        // extract user information
+        const extractedInfo = {
+          id: decodedToken.user?.id || null,
+          username: decodedToken.user?.username || null,
+          email: decodedToken.user?.email || null,
+        };
+
+        setUserInfo(extractedInfo);
+        setEmail(extractedInfo.email);
+
+        setTokenDebugInfo({ tokenPresent: true, decodedSuccessfully: true });
+
+        console.log("Extracted user info:", extractedInfo);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        setTokenDebugInfo({ tokenPresent: true, decodedSuccessfully: false });
+      }
+    } else {
+      console.log("No token found in localStorage");
+      setTokenDebugInfo({ tokenPresent: false, decodedSuccessfully: false });
+    }
+  }, []);
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!description || !image) {
+      alert("Please fill in the description and upload an image.");
+      return;
+    }
+
+    // Ensure the user is authenticated
+    if (!userInfo.id) {
+      alert("You must be logged in to submit a repair request.");
+      console.log(userInfo);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("description", description);
+    formData.append("image", image);
+    formData.append("userId", userInfo.id);
+    formData.append("pickupdate" ,pickup_date)
+    formData.append("userEmail", userInfo.email);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/routes/request/request",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log("Repair request submitted successfully:", response.data);
+      alert("Repair request submitted successfully!");
+      toast({
+        title: "Sucessfully submitted",
+        description: "you will receive email soon",
+      })
+
+      setDescription("");
+      setpickupdate("");
+      setImage(null);
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error("Error submitting repair request:", error);
+      // alert("Error submitting repair request. Please try again.");
+      toast({
+        title: "error",
+        description: "Error submitting repair request. Please try again",
+      })
+    }
+  };
 
   const handleFileChange = (event) => {
-    // Convert the FileList object to an array
-    const files = Array.from(event.target.files);
-    // Update the state with the selected files
-    setSelectedFiles(files);
+    const file = event.target.files[0];
+    setImage(file);
+    setSelectedFiles(Array.from(event.target.files));
   };
 
   return (
     <Layout>
-      <div className="">
-        <div className=" bg-gray-500">
-          <div className=" absolute h-screen w-auto  mt-1 text-black ">
-            <h1 className=" mt-0 mx-72 underline uppercase">Repair request</h1>
-            <div className=" bg-gray-300 h-auto w-96 my-2 mx-48  backdrop-blur-sm bg-opacity-50 border-b-2 rounded-lg ">
-              <form action="">
-                <div className=" ml-1 mr-5 mt-0   font-semibold">
-                  <h1 className=" my-1 ml-5 uppercase">enter date</h1>
-                  <input
-                    type="date"
-                    className="input-date bg-gray-200 outline-none border-none w-auto py-2 px-4  mx-5 mt-1 rounded-lg "
+      <div className="bg-gray-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto  rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+          <div className="md:flex">
+            <div className="p-8 w-full">
+              <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-1">
+                Repair Request
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <p>User Email: {email}</p>
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows="3"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Describe the issue"
                     required
                   />
                 </div>
 
-                <div className=" mx-5 mt-2  gap-1 font-semibold">
-                  <div className="flex gap-3">
-                    <h1 className=" mt-2 my-1 uppercase">enter device name</h1>
-                    <MdOutlineDevices className="h-8 w-8 mt-2" />
-                  </div>
-                  <input
-                    type="text"
-                    className="block w-1/2 py-2 text-sm bg-white border-b-2 my-1 appearance-none text-black rounded-lg"
-                    placeholder="enter device name"
-                    required
-                  />
-                </div>
-
-                <div className="  input-box mx-5 mt-3  gap-1  font-semibold">
-                  <div className="flex gap-3">
-                    <h1 className=" mt-2 my-1 uppercase">enter issue</h1>
-                    <MdOutlineDevices className="h-8 w-8 mt-2" />
-                  </div>
-                  <input
-                    type="text"
-                    className="block w-full max-w-lg h-full max-h-80  py-2 text-sm bg-white border-b-2 my-5 appearance-none text-black rounded-lg"
-                    placeholder="enter your issue"
-                    required
-                  />
-                </div>
-
-                <div className="  input-box mx-5 mt-3  gap-1  text-xl font-semibold">
-                  <div className="flex gap-3">
-                    <h1 className="text-xl mt-2 my-1 uppercase">upload pic</h1>
-                  </div>
-                  {/* //add drop zone */}
-                  <div class="flex items-center justify-center w-full">
-                    {/* //label act as a cilckable area for file input */}
-                    <label
-                      for="dropzone-file"
-                      class="flex flex-col items-center justify-center w-full h-44 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100"
-                    >
-                      <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <IoCloudUploadOutline className="w-10 h-10 mb-3 text-gray-400" />
-                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span class="font-semibold">Click to upload</span> or
-                          drag and drop
-                        </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                <div>
+                  <label
+                    htmlFor="dropzone-file"
+                    className="flex flex-col items-center justify-center w-full h-44 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <IoCloudUploadOutline className="w-10 h-10 mb-3 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
                         SVG, PNG, JPG or GIF (MAX. 800x400px)
-                      </p> 
-                        {/* {/* //use array to save the selected data and display that data */}
-                      </div>
-                      <input
-                        id="dropzone-file"
-                        type="file"
-                        class="hidden"
-                        onChange={handleFileChange}
-                        multiple
-                      />
-                    </label>
-                  </div>
-                  <div className="">
-                    {selectedFiles.length > 0 && (
-                      <ul>
-                        {/* Map through the selected files and display each file's name */}
-                        {selectedFiles.map((file, index) => (
-                          <li
-                            key={index}
-                            className="text-sm text-gray-500 dark:text-gray-400"
-                          >
-                            <span className="block w-32 truncate text-center">
-                              {file.name} {/* Display the name of the file */}
-                            </span>
-                            {file.type.startsWith("image/") && (
-                              <img
-                                src={URL.createObjectURL(file)} // Create a URL for the image preview
-                                alt={file.name}
-                                className="mt-2 h-20 w- object-cover rounded-lg"
-                              />
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                      </p>
+                    </div>
+                    <input
+                      id="dropzone-file"
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      multiple
+                    />
+                  </label>
                 </div>
-                <div className="button bg-blue-500 w-32 hover:bg-blue-700 text-white font-bold ml-7 mb-3 mt-5 py-2 px-4 rounded-full">
-                  submit
+
+                <div className="selected-files">
+                  {selectedFiles.length > 0 && (
+                    <ul>
+                      {selectedFiles.map((file, index) => (
+                        <li key={index} className="text-sm text-gray-500">
+                          <span className="block w-32 truncate text-center">
+                            {file.name}
+                          </span>
+                          {file.type.startsWith("image/") && (
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={file.name}
+                              className="mt-2 h-20 w-20 object-cover rounded-lg"
+                            />
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {/* //add date picker from shadcn ui */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[280px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? (
+                        format(date, "PPP")
+                      ) : (
+                        <span>Pick a date for pickup</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      value={pickup_date}
+                      onChange={(e) =>  setpickupdate(e.target.value)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div>
+                  <button
+                    type="submit"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Submit Request
+                  </button>
                 </div>
               </form>
             </div>
@@ -123,4 +260,5 @@ export const Repairrequest = () => {
     </Layout>
   );
 };
+
 export default Repairrequest;

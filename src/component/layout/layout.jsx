@@ -17,7 +17,7 @@ import Sidebar from "../sidebar";
 // Pass the child props
 export default function Layout({ children }) {
   return (
-    <div className="flex">
+    <div className="flex  ">
       {/* display the child prop */}
       <Sidebar className="fixed" />
       {children}
