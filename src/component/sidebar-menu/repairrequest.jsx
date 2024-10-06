@@ -3,6 +3,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import Layout from "../layout/layout";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+// import  jwtDecode  from "jwt-decode";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,9 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 // import { toast, useToast } from "@/hooks/use-toast"
-import { useToast } from "@/hooks/use-toast"
-
-
+import { useToast } from "@/hooks/use-toast";
 
 // import { decode } from "jwt-decode";
 // import { useAuth } from "../context/authcontexts"; // Custom auth hook
@@ -24,7 +23,8 @@ import { useToast } from "@/hooks/use-toast"
 export const Repairrequest = () => {
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
-  const [pickup_date, setpickupdate] = useState("");  
+  // const [pickupDate, setpickupdate] = useState("");
+  const [pickupDate, setPickupDate] = useState(null);
   const [image, setImage] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [userInfo, setUserInfo] = useState({
@@ -38,8 +38,8 @@ export const Repairrequest = () => {
   });
 
   // const [date, setDate] = React.useState<Date>
-  const [date, setDate] = React.useState(null);
-  const { toast} = useToast()
+  // const [date, setDate] = React.useState(null);
+  const { toast } = useToast();
 
   // const { user , loading } = useAuth(); // Access authenticated user
   // const token = localStorage.getItem("authToken");
@@ -50,10 +50,10 @@ export const Repairrequest = () => {
     const token = localStorage.getItem("token");
     console.log("Token from localStorage:", token ? "Present" : "Not found");
 
-    const storedEmail = localStorage.getItem("email");
-    if (storedEmail) {
-      setEmail(storedEmail);
-    }
+    // const storedEmail = localStorage.getItem("email");
+    // if (storedEmail) {
+    //   setEmail(storedEmail);
+    // }
 
     if (token) {
       try {
@@ -68,9 +68,10 @@ export const Repairrequest = () => {
         };
 
         setUserInfo(extractedInfo);
-        setEmail(extractedInfo.email);
+        // setEmail(extractedInfo.email);
 
         setTokenDebugInfo({ tokenPresent: true, decodedSuccessfully: true });
+        localStorage.setItem("email", extractedInfo.email);
 
         console.log("Extracted user info:", extractedInfo);
       } catch (error) {
@@ -83,19 +84,27 @@ export const Repairrequest = () => {
     }
   }, []);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!description || !image) {
-      alert("Please fill in the description and upload an image.");
+    // if (!description || !image) {
+    //   alert("Please fill in the description and upload an image.");
+    //   return;
+    // }
+
+    if (!description || !userInfo.id  || !pickupDate) {
+      // alert("Please fill in all required fields.");
+      toast({
+        description: "Please fill in all required fields.",
+      });
       return;
     }
+
 
     // Ensure the user is authenticated
     if (!userInfo.id) {
       alert("You must be logged in to submit a repair request.");
-      console.log(userInfo);
+      // console.log(userInfo);
       return;
     }
 
@@ -103,8 +112,10 @@ export const Repairrequest = () => {
     formData.append("description", description);
     formData.append("image", image);
     formData.append("userId", userInfo.id);
-    formData.append("pickupdate" ,pickup_date)
-    formData.append("userEmail", userInfo.email);
+    // formData.append("pickupdate", pickup_date);
+    // formData.append("userEmail", userInfo.email);
+    formData.append("pickupDate", pickupDate ? format(pickupDate, "yyyy-MM-dd") : "");
+    
 
     try {
       const response = await axios.post(
@@ -115,14 +126,14 @@ export const Repairrequest = () => {
         }
       );
       console.log("Repair request submitted successfully:", response.data);
-      alert("Repair request submitted successfully!");
+     
       toast({
         title: "Sucessfully submitted",
         description: "you will receive email soon",
-      })
+      });
 
       setDescription("");
-      setpickupdate("");
+      setPickupDate(null);
       setImage(null);
       setSelectedFiles([]);
     } catch (error) {
@@ -130,8 +141,8 @@ export const Repairrequest = () => {
       // alert("Error submitting repair request. Please try again.");
       toast({
         title: "error",
-        description: "Error submitting repair request. Please try again",
-      })
+        description: `Error submitting repair request:${error.response?.data?.message || error.message}, Please try again`,
+      });
     }
   };
 
@@ -151,7 +162,8 @@ export const Repairrequest = () => {
                 Repair Request
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <p>User Email: {email}</p>
+                {/* <p>User Email: {userInfo.email || "Email not available"}</p> */}
+                <p>User id: {userInfo.id}</p>
                 <div>
                   <label
                     htmlFor="description"
@@ -222,12 +234,12 @@ export const Repairrequest = () => {
                       variant={"outline"}
                       className={cn(
                         "w-[280px] justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
+                        !pickupDate && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? (
-                        format(date, "PPP")
+                      {pickupDate ? (
+                        format(pickupDate, "PPP")
                       ) : (
                         <span>Pick a date for pickup</span>
                       )}
@@ -236,10 +248,10 @@ export const Repairrequest = () => {
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      value={pickup_date}
-                      onChange={(e) =>  setpickupdate(e.target.value)}
+                      onSelect={setPickupDate}
+                      // value={pickup_date}
+                      selected={pickupDate}
+                      // onChange={(e) => setpickupdate(e.target.value)}
                       initialFocus
                     />
                   </PopoverContent>
