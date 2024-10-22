@@ -3,7 +3,6 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import Layout from "../layout/layout";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-// import  jwtDecode  from "jwt-decode";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,21 +13,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// import { toast, useToast } from "@/hooks/use-toast"
 import { useToast } from "@/hooks/use-toast";
 
-// import { decode } from "jwt-decode";
-// import { useAuth } from "../context/authcontexts"; // Custom auth hook
-
 export const Repairrequest = () => {
-  const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
-  // const [pickupDate, setpickupdate] = useState("");
   const [pickupDate, setPickupDate] = useState(null);
   const [image, setImage] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [userInfo, setUserInfo] = useState({
-    id: null,
+    Id: null,
     username: null,
     email: null,
   });
@@ -37,38 +30,24 @@ export const Repairrequest = () => {
     decodedSuccessfully: false,
   });
 
-  // const [date, setDate] = React.useState<Date>
-  // const [date, setDate] = React.useState(null);
   const { toast } = useToast();
-
-  // const { user , loading } = useAuth(); // Access authenticated user
-  // const token = localStorage.getItem("authToken");
-  // const decodedToken = token ? jwtDecode(token) : null;
-  // const email = decodedToken?.email || "Not logged in";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     console.log("Token from localStorage:", token ? "Present" : "Not found");
 
-    // const storedEmail = localStorage.getItem("email");
-    // if (storedEmail) {
-    //   setEmail(storedEmail);
-    // }
-
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        console.log("Decoded token:", decodedToken);
+        // console.log("Decoded token:", decodedToken);
 
         // extract user information
         const extractedInfo = {
-          id: decodedToken.user?.id || null,
-          username: decodedToken.user?.username || null,
-          email: decodedToken.user?.email || null,
+          Id: decodedToken.client?.id || null,
+          email: decodedToken.client?.email || null,
         };
 
         setUserInfo(extractedInfo);
-        // setEmail(extractedInfo.email);
 
         setTokenDebugInfo({ tokenPresent: true, decodedSuccessfully: true });
         localStorage.setItem("email", extractedInfo.email);
@@ -87,46 +66,36 @@ export const Repairrequest = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // if (!description || !image) {
-    //   alert("Please fill in the description and upload an image.");
-    //   return;
-    // }
-
-    if (!description || !userInfo.id  || !pickupDate) {
-      // alert("Please fill in all required fields.");
+    if (!description || !userInfo.Id || !userInfo.email || !pickupDate) {
       toast({
         description: "Please fill in all required fields.",
       });
       return;
     }
 
-
-    // Ensure the user is authenticated
-    if (!userInfo.id) {
-      alert("You must be logged in to submit a repair request.");
-      // console.log(userInfo);
-      return;
-    }
-
     const formData = new FormData();
     formData.append("description", description);
     formData.append("image", image);
-    formData.append("userId", userInfo.id);
-    // formData.append("pickupdate", pickup_date);
-    // formData.append("userEmail", userInfo.email);
-    formData.append("pickupDate", pickupDate ? format(pickupDate, "yyyy-MM-dd") : "");
-    
+    // formData.append("clientId", parseInt(userInfo.Id));
+    formData.append("clientId", userInfo.Id);
+    formData.append("clientEmail", userInfo.email);
+    formData.append(
+      "pickupDate",
+      pickupDate ? format(pickupDate, "yyyy-MM-dd") : ""
+    );
 
     try {
       const response = await axios.post(
         "http://localhost:5000/routes/request/request",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       console.log("Repair request submitted successfully:", response.data);
-     
+
       toast({
         title: "Sucessfully submitted",
         description: "you will receive email soon",
@@ -138,10 +107,11 @@ export const Repairrequest = () => {
       setSelectedFiles([]);
     } catch (error) {
       console.error("Error submitting repair request:", error);
-      // alert("Error submitting repair request. Please try again.");
       toast({
         title: "error",
-        description: `Error submitting repair request:${error.response?.data?.message || error.message}, Please try again`,
+        description: `Error submitting repair request: ${
+          error.response?.data?.message || error.message
+        }, Please try again`,
       });
     }
   };
@@ -162,8 +132,8 @@ export const Repairrequest = () => {
                 Repair Request
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* <p>User Email: {userInfo.email || "Email not available"}</p> */}
-                <p>User id: {userInfo.id}</p>
+                <p>User Email: {userInfo.email || "Email not available"}</p>
+                <p>Client ID: {userInfo.Id || "Not available"}</p>
                 <div>
                   <label
                     htmlFor="description"
